@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Parking - Smart Parking System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="booking.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav-header" data-testid="main-navigation">
+        <div class="nav-container">
+            <div class="nav-logo" data-testid="logo">
+                <a href="index.html" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 0.75rem;">
+                    <i class="fas fa-parking"></i>
+                    <span>SMARTPARK</span>
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="index.html" data-testid="home-link">Home</a>
+                <a href="dashboard.html" data-testid="dashboard-link">Dashboard</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-container">
+        <div class="booking-container">
+            <!-- Available Slots Panel -->
+            <div class="panel" data-testid="available-slots-panel">
+                <div class="panel-header">
+                    <h2>Available Parking Slots</h2>
+                    <div class="filter-controls">
+                        <select id="slotTypeFilter" data-testid="slot-type-filter" class="filter-select">
+                            <option value="all">All Types</option>
+                            <option value="VIP">VIP</option>
+                            <option value="EV">EV Charging</option>
+                            <option value="Regular">Regular</option>
+                        </select>
+                        <button id="refreshSlots" data-testid="refresh-slots-btn" class="btn-icon">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="slots-stats" id="slotsStats" data-testid="slots-stats">
+                    <div class="stat-badge available">
+                        <span class="stat-number" id="availableCount">0</span>
+                        <span class="stat-text">Available</span>
+                    </div>
+                    <div class="stat-badge occupied">
+                        <span class="stat-number" id="occupiedCount">0</span>
+                        <span class="stat-text">Occupied</span>
+                    </div>
+                    <div class="stat-badge reserved">
+                        <span class="stat-number" id="reservedCount">0</span>
+                        <span class="stat-text">Reserved</span>
+                    </div>
+                </div>
+
+                <div class="slots-grid" id="slotsGrid" data-testid="slots-grid">
+                    <!-- Slots will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Booking Form Panel -->
+            <div class="panel" data-testid="booking-form-panel">
+                <div class="panel-header">
+                    <h2>Book Your Spot</h2>
+                </div>
+
+                <form id="bookingForm" data-testid="booking-form" class="booking-form">
+                    <div class="form-group">
+                        <label for="vehicleNumber" data-testid="vehicle-number-label">Vehicle Number</label>
+                        <input 
+                            type="text" 
+                            id="vehicleNumber" 
+                            data-testid="vehicle-number-input"
+                            placeholder="e.g., ABC-1234" 
+                            required
+                            class="form-input"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="slotSelect" data-testid="slot-select-label">Select Slot</label>
+                        <select id="slotSelect" data-testid="slot-select" class="form-input" required>
+                            <option value="">Choose a parking slot</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-label" data-testid="vip-checkbox-label">
+                            <input type="checkbox" id="isVIP" data-testid="vip-checkbox">
+                            <span class="checkbox-text">
+                                <i class="fas fa-crown"></i> VIP Parking (30% discount)
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="estimatedDuration" data-testid="duration-label">Estimated Duration (minutes)</label>
+                        <input 
+                            type="number" 
+                            id="estimatedDuration" 
+                            data-testid="duration-input"
+                            value="60" 
+                            min="15" 
+                            class="form-input"
+                        >
+                    </div>
+
+                    <div class="cost-estimate" id="costEstimate" data-testid="cost-estimate">
+                        <div class="cost-label">Estimated Cost</div>
+                        <div class="cost-value" id="estimatedCost">$0.00</div>
+                    </div>
+
+                    <button type="submit" class="btn-submit" data-testid="book-now-btn">
+                        <i class="fas fa-check-circle"></i> BOOK NOW
+                    </button>
+                </form>
+
+                <div id="bookingResult" data-testid="booking-result" class="result-message" style="display: none;"></div>
+                <div id="qrCode" data-testid="qr-code-display" class="qr-display" style="display: none;"></div>
+            </div>
+
+            <!-- Vehicle Management Panel -->
+            <div class="panel" data-testid="vehicle-management-panel">
+                <div class="panel-header">
+                    <h2>Vehicle Management</h2>
+                </div>
+
+                <div class="management-section">
+                    <h3>Check Vehicle Status</h3>
+                    <div class="form-group">
+                        <input 
+                            type="text" 
+                            id="checkVehicleNumber" 
+                            data-testid="check-vehicle-input"
+                            placeholder="Enter vehicle number" 
+                            class="form-input"
+                        >
+                        <button id="checkVehicle" data-testid="check-vehicle-btn" class="btn-secondary">
+                            <i class="fas fa-search"></i> CHECK STATUS
+                        </button>
+                    </div>
+                    <div id="vehicleStatus" data-testid="vehicle-status" class="vehicle-status"></div>
+                </div>
+
+                <div class="management-section">
+                    <h3>Exit Parking</h3>
+                    <div class="form-group">
+                        <input 
+                            type="text" 
+                            id="exitVehicleNumber" 
+                            data-testid="exit-vehicle-input"
+                            placeholder="Enter vehicle number" 
+                            class="form-input"
+                        >
+                        <button id="exitVehicle" data-testid="exit-vehicle-btn" class="btn-destructive">
+                            <i class="fas fa-sign-out-alt"></i> EXIT & PAY
+                        </button>
+                    </div>
+                    <div id="exitResult" data-testid="exit-result" class="exit-result"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="booking.js"></script>
+</body>
+</html>

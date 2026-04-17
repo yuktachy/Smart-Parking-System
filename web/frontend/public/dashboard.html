@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Smart Parking System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav-header" data-testid="main-navigation">
+        <div class="nav-container">
+            <div class="nav-logo" data-testid="logo">
+                <a href="index.html" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 0.75rem;">
+                    <i class="fas fa-parking"></i>
+                    <span>SMARTPARK</span>
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="index.html" data-testid="home-link">Home</a>
+                <a href="booking.html" data-testid="booking-link">Book Slot</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="dashboard-header" data-testid="dashboard-header">
+            <div>
+                <h1 class="dashboard-title">Control Center</h1>
+                <p class="dashboard-subtitle">Real-time parking analytics and management</p>
+            </div>
+            <button id="refreshDashboard" data-testid="refresh-dashboard-btn" class="btn-refresh">
+                <i class="fas fa-sync-alt"></i> REFRESH
+            </button>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="metrics-grid" data-testid="metrics-grid">
+            <div class="metric-card" data-testid="metric-occupancy">
+                <div class="metric-icon occupancy">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-label">Occupancy Rate</div>
+                    <div class="metric-value" id="occupancyRate">0%</div>
+                    <div class="metric-detail" id="occupancyDetail">0 / 0 slots</div>
+                </div>
+            </div>
+
+            <div class="metric-card" data-testid="metric-revenue">
+                <div class="metric-icon revenue">
+                    <i class="fas fa-rupee-sign"></i>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-label">Total Revenue</div>
+                    <div class="metric-value" id="totalRevenue">Rs 0.00</div>
+                    <div class="metric-detail" id="avgRevenue">Rs 0.00 avg</div>
+                </div>
+            </div>
+
+            <div class="metric-card" data-testid="metric-vehicles">
+                <div class="metric-icon vehicles">
+                    <i class="fas fa-car"></i>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-label">Active Vehicles</div>
+                    <div class="metric-value" id="activeVehicles">0</div>
+                    <div class="metric-detail" id="totalVehicles">0 total</div>
+                </div>
+            </div>
+
+            <div class="metric-card" data-testid="metric-sensors">
+                <div class="metric-icon sensors">
+                    <i class="fas fa-sensor"></i>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-label">Sensor Health</div>
+                    <div class="metric-value" id="sensorHealth">0%</div>
+                    <div class="metric-detail" id="sensorDetail">0 / 0 active</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Occupancy by Zone -->
+            <div class="dashboard-panel" data-testid="occupancy-zone-panel">
+                <div class="panel-header">
+                    <h3 class="panel-title">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Occupancy by Zone
+                    </h3>
+                </div>
+                <div class="panel-content" id="occupancyByZone">
+                    <!-- Zone data will be loaded here -->
+                </div>
+            </div>
+
+            <!-- VIP Statistics -->
+            <div class="dashboard-panel" data-testid="vip-stats-panel">
+                <div class="panel-header">
+                    <h3 class="panel-title">
+                        <i class="fas fa-crown"></i>
+                        VIP Statistics
+                    </h3>
+                </div>
+                <div class="panel-content">
+                    <div class="vip-stats" id="vipStats">
+                        <!-- VIP stats will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Climate Impact -->
+            <div class="dashboard-panel climate-panel" data-testid="climate-impact-panel">
+                <div class="panel-header">
+                    <h3 class="panel-title">
+                        <i class="fas fa-leaf"></i>
+                        Climate Impact
+                    </h3>
+                </div>
+                <div class="panel-content">
+                    <div class="climate-stats" id="climateStats">
+                        <!-- Climate stats will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Reservations -->
+            <div class="dashboard-panel" data-testid="reservations-panel">
+                <div class="panel-header">
+                    <h3 class="panel-title">
+                        <i class="fas fa-calendar-check"></i>
+                        Reservations
+                    </h3>
+                </div>
+                <div class="panel-content">
+                    <div class="reservation-stats" id="reservationStats">
+                        <!-- Reservation stats will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sensor Network Status -->
+            <div class="dashboard-panel full-width" data-testid="sensor-network-panel">
+                <div class="panel-header">
+                    <h3 class="panel-title">
+                        <i class="fas fa-network-wired"></i>
+                        Sensor Network Status
+                    </h3>
+                </div>
+                <div class="panel-content">
+                    <div class="sensor-grid" id="sensorGrid">
+                        <!-- Sensor data will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="dashboard-panel full-width" data-testid="activity-panel">
+                <div class="panel-header">
+                    <h3 class="panel-title">
+                        <i class="fas fa-history"></i>
+                        Recent Activity
+                    </h3>
+                </div>
+                <div class="panel-content">
+                    <div class="activity-table" id="activityTable">
+                        <!-- Activity will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="auth-utils.js"></script>
+    <script src="ws-client.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+</html>

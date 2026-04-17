@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment - Smart Parking System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="booking.css">
+    <style>
+        .payment-page {
+            min-height: 100vh;
+            padding: 6rem 2rem 2rem;
+            background: var(--bg-default);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .payment-wrapper {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .payment-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .payment-header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .payment-header p {
+            color: var(--text-secondary);
+        }
+
+        .payment-summary {
+            background: var(--bg-paper);
+            border: 1px solid var(--border-default);
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .summary-row:last-child {
+            border-bottom: none;
+        }
+
+        .summary-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .summary-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .summary-total {
+            background: var(--bg-surface);
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+
+        .total-label {
+            font-size: 1.125rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .total-amount {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .payment-methods {
+            background: var(--bg-paper);
+            border: 1px solid var(--border-default);
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .payment-methods h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .method-option {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.25rem;
+            background: var(--bg-surface);
+            border: 2px solid var(--border-default);
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 1rem;
+        }
+
+        .method-option:hover {
+            border-color: var(--primary);
+            background: rgba(0, 240, 255, 0.05);
+        }
+
+        .method-option.selected {
+            border-color: var(--primary);
+            background: rgba(0, 240, 255, 0.1);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+        }
+
+        .method-option input[type="radio"] {
+            display: none;
+        }
+
+        .method-radio {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-default);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .method-option.selected .method-radio {
+            border-color: var(--primary);
+        }
+
+        .method-option.selected .method-radio::after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            background: var(--primary);
+            border-radius: 50%;
+        }
+
+        .method-icon {
+            font-size: 1.5rem;
+            width: 40px;
+            text-align: center;
+        }
+
+        .method-icon.stripe { color: #635BFF; }
+        .method-icon.razorpay { color: #3395FF; }
+        .method-icon.paypal { color: #00457C; }
+
+        .method-info h4 {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .method-info p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .btn-pay {
+            width: 100%;
+            background: var(--primary);
+            color: #000;
+            border: none;
+            padding: 1.25rem 2rem;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+        }
+
+        .btn-pay:hover {
+            background: var(--primary-hover);
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .btn-pay:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .payment-status {
+            text-align: center;
+            padding: 2rem;
+            display: none;
+        }
+
+        .payment-status.show {
+            display: block;
+        }
+
+        .payment-status.success {
+            background: rgba(57, 255, 20, 0.05);
+            border: 1px solid var(--secondary);
+        }
+
+        .payment-status.success i {
+            font-size: 3rem;
+            color: var(--secondary);
+            margin-bottom: 1rem;
+        }
+
+        .payment-status.error {
+            background: rgba(255, 0, 60, 0.05);
+            border: 1px solid var(--destructive);
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .back-link a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color 0.3s;
+        }
+
+        .back-link a:hover {
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav-header" data-testid="main-navigation">
+        <div class="nav-container">
+            <div class="nav-logo" data-testid="logo">
+                <a href="index.html" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 0.75rem;">
+                    <i class="fas fa-parking"></i>
+                    <span>SMARTPARK</span>
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="index.html" data-testid="home-link">Home</a>
+                <a href="booking.html" data-testid="booking-link">Book Slot</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="payment-page">
+        <div class="payment-wrapper">
+            <div class="payment-header">
+                <h1 data-testid="payment-title">Complete Payment</h1>
+                <p>Secure payment processing</p>
+            </div>
+
+            <!-- Payment Summary -->
+            <div class="payment-summary" data-testid="payment-summary">
+                <div class="summary-row">
+                    <span class="summary-label">Vehicle</span>
+                    <span class="summary-value" id="paymentVehicle" data-testid="payment-vehicle">-</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Service</span>
+                    <span class="summary-value">Parking Fee</span>
+                </div>
+                <div class="summary-total">
+                    <span class="total-label">Total Due</span>
+                    <span class="total-amount" id="paymentAmount" data-testid="payment-amount">Rs 0.00</span>
+                </div>
+            </div>
+
+            <!-- Payment Methods -->
+            <div class="payment-methods" data-testid="payment-methods">
+                <h3>Select Payment Method</h3>
+                
+                <div class="method-option selected" data-method="stripe" data-testid="payment-method-stripe" onclick="selectMethod(this, 'stripe')">
+                    <input type="radio" name="paymentMethod" value="stripe" checked>
+                    <div class="method-radio"></div>
+                    <div class="method-icon stripe"><i class="fab fa-stripe-s"></i></div>
+                    <div class="method-info">
+                        <h4>Stripe</h4>
+                        <p>Credit/Debit Card</p>
+                    </div>
+                </div>
+
+                <div class="method-option" data-method="razorpay" data-testid="payment-method-razorpay" onclick="selectMethod(this, 'razorpay')">
+                    <input type="radio" name="paymentMethod" value="razorpay">
+                    <div class="method-radio"></div>
+                    <div class="method-icon razorpay"><i class="fas fa-bolt"></i></div>
+                    <div class="method-info">
+                        <h4>Razorpay</h4>
+                        <p>UPI, Cards, Wallets</p>
+                    </div>
+                </div>
+
+                <div class="method-option" data-method="paypal" data-testid="payment-method-paypal" onclick="selectMethod(this, 'paypal')">
+                    <input type="radio" name="paymentMethod" value="paypal">
+                    <div class="method-radio"></div>
+                    <div class="method-icon paypal"><i class="fab fa-paypal"></i></div>
+                    <div class="method-info">
+                        <h4>PayPal</h4>
+                        <p>PayPal Account</p>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-pay" id="payButton" data-testid="pay-button" onclick="processPayment()">
+                <i class="fas fa-lock"></i> PAY NOW
+            </button>
+
+            <div id="paymentStatus" data-testid="payment-status" class="payment-status"></div>
+
+            <div class="back-link">
+                <a href="booking.html"><i class="fas fa-arrow-left"></i> Back to Booking</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin;
+        let selectedMethod = 'stripe';
+        
+        // Get URL parameters
+        function getUrlParam(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+        
+        // Initialize payment page
+        const amount = getUrlParam('amount') || '0.00';
+        const vehicle = getUrlParam('vehicle') || '-';
+        const transactionId = getUrlParam('transaction_id');
+        
+        document.getElementById('paymentVehicle').textContent = vehicle;
+        document.getElementById('paymentAmount').textContent = `Rs ${parseFloat(amount).toFixed(2)}`;
+        
+        // Select payment method
+        function selectMethod(element, method) {
+            document.querySelectorAll('.method-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            element.classList.add('selected');
+            element.querySelector('input[type="radio"]').checked = true;
+            selectedMethod = method;
+        }
+        
+        // Process payment
+        async function processPayment() {
+            const payBtn = document.getElementById('payButton');
+            payBtn.disabled = true;
+            payBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PROCESSING...';
+            
+            try {
+                // Create payment checkout
+                const response = await fetch(`${API_URL}/api/payment/create-checkout`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: parseFloat(amount),
+                        vehicle_number: vehicle,
+                        payment_provider: selectedMethod
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Payment creation failed');
+                
+                const data = await response.json();
+                
+                // Simulate payment processing
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Confirm payment
+                const confirmResponse = await fetch(`${API_URL}/api/payment/confirm`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        transaction_id: data.transaction_id
+                    })
+                });
+                
+                if (!confirmResponse.ok) throw new Error('Payment confirmation failed');
+                
+                showStatus('success', 'Payment Successful!', `Your parking fee of Rs ${parseFloat(amount).toFixed(2)} has been paid via ${selectedMethod}. Thank you!`);
+                
+            } catch (error) {
+                showStatus('error', 'Payment Failed', error.message);
+                payBtn.disabled = false;
+                payBtn.innerHTML = '<i class="fas fa-lock"></i> PAY NOW';
+            }
+        }
+        
+        // Show status
+        function showStatus(type, title, message) {
+            const statusDiv = document.getElementById('paymentStatus');
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-times-circle';
+            const color = type === 'success' ? 'var(--secondary)' : 'var(--destructive)';
+            
+            statusDiv.innerHTML = `
+                <i class="fas ${icon}" style="font-size: 3rem; color: ${color}; display: block; margin-bottom: 1rem;"></i>
+                <h3 style="color: ${color}; margin-bottom: 0.5rem;">${title}</h3>
+                <p style="color: var(--text-secondary);">${message}</p>
+                ${type === 'success' ? '<a href="booking.html" style="display: inline-block; margin-top: 1.5rem; color: var(--primary); text-decoration: none;">Back to Parking</a>' : ''}
+            `;
+            statusDiv.className = `payment-status ${type} show`;
+            
+            if (type === 'success') {
+                document.getElementById('payButton').style.display = 'none';
+            }
+        }
+
+        // Check if returning from payment
+        if (transactionId) {
+            showStatus('success', 'Payment Complete', 'Your transaction has been processed successfully.');
+            document.getElementById('payButton').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

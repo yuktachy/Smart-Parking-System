@@ -1,0 +1,493 @@
+.page-container {
+    min-height: 100vh;
+    padding: 6rem 2rem 2rem;
+    background: var(--bg-default);
+}
+
+.booking-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+}
+
+.panel {
+    background: var(--bg-paper);
+    border: 1px solid var(--border-default);
+    padding: 0;
+    transition: all 0.3s;
+}
+
+.panel:hover {
+    border-color: rgba(0, 240, 255, 0.2);
+}
+
+.panel-header {
+    padding: 2rem;
+    border-bottom: 1px solid var(--border-default);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.panel-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.filter-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.filter-select {
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border-default);
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.filter-select:focus {
+    border-color: var(--border-focus);
+}
+
+.btn-icon {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    color: var(--text-primary);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-icon:hover {
+    background: var(--primary);
+    color: #000;
+    border-color: var(--primary);
+}
+
+.slots-stats {
+    padding: 1.5rem 2rem;
+    display: flex;
+    gap: 1.5rem;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border-default);
+}
+
+.stat-badge {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.stat-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.stat-text {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-secondary);
+}
+
+.stat-badge.available .stat-number {
+    color: var(--secondary);
+}
+
+.stat-badge.occupied .stat-number {
+    color: var(--destructive);
+}
+
+.stat-badge.reserved .stat-number {
+    color: var(--warning);
+}
+
+.slots-grid {
+    padding: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 1rem;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.slot-item {
+    background: var(--bg-surface);
+    border: 2px solid var(--border-default);
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.slot-item:hover {
+    transform: translateY(-2px);
+}
+
+.slot-item.available {
+    border-color: var(--secondary);
+}
+
+.slot-item.available:hover {
+    background: rgba(57, 255, 20, 0.1);
+    border-color: var(--secondary);
+}
+
+.slot-item.occupied {
+    border-color: var(--destructive);
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.slot-item.reserved {
+    border-color: var(--warning);
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.slot-item.selected {
+    background: rgba(0, 240, 255, 0.2);
+    border-color: var(--primary);
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+}
+
+.slot-type {
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-disabled);
+    margin-bottom: 0.25rem;
+}
+
+.slot-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.slot-status {
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.vip-badge {
+    position: absolute;
+    top: 0.25rem;
+    right: 0.25rem;
+    color: var(--accent);
+    font-size: 0.75rem;
+}
+
+/* Booking Form */
+.booking-form {
+    padding: 2rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.form-input {
+    width: 100%;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    color: var(--text-primary);
+    padding: 0.875rem;
+    font-size: 1rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.form-input:focus {
+    border-color: var(--border-focus);
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    padding: 1rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    transition: all 0.3s;
+}
+
+.checkbox-label:hover {
+    background: rgba(112, 0, 255, 0.05);
+    border-color: var(--accent);
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.checkbox-text {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.checkbox-text i {
+    color: var(--accent);
+}
+
+.cost-estimate {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.cost-label {
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-secondary);
+}
+
+.cost-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.btn-submit {
+    width: 100%;
+    background: var(--primary);
+    color: #000;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+}
+
+.btn-submit:hover {
+    background: var(--primary-hover);
+    box-shadow: 0 0 25px rgba(0, 240, 255, 0.6);
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    width: 100%;
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border-default);
+    padding: 0.875rem 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--primary);
+}
+
+.btn-destructive {
+    width: 100%;
+    background: transparent;
+    color: var(--destructive);
+    border: 1px solid var(--destructive);
+    padding: 0.875rem 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.btn-destructive:hover {
+    background: rgba(255, 0, 60, 0.1);
+}
+
+.result-message {
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+    border: 1px solid var(--border-default);
+}
+
+.result-message.success {
+    background: rgba(57, 255, 20, 0.05);
+    border-color: var(--secondary);
+    color: var(--secondary);
+}
+
+.result-message.error {
+    background: rgba(255, 0, 60, 0.05);
+    border-color: var(--destructive);
+    color: var(--destructive);
+}
+
+.qr-display {
+    padding: 2rem;
+    text-align: center;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    margin-top: 1.5rem;
+}
+
+.qr-code-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.25rem;
+    color: var(--primary);
+    margin-top: 1rem;
+}
+
+/* Vehicle Management */
+.management-section {
+    padding: 2rem;
+    border-bottom: 1px solid var(--border-default);
+}
+
+.management-section:last-child {
+    border-bottom: none;
+}
+
+.management-section h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+}
+
+.vehicle-status {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    display: none;
+}
+
+.vehicle-status.show {
+    display: block;
+}
+
+.vehicle-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.info-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-disabled);
+}
+
+.info-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.exit-result {
+    margin-top: 1.5rem;
+    display: none;
+}
+
+.exit-result.show {
+    display: block;
+}
+
+.payment-card {
+    background: var(--bg-surface);
+    border: 2px solid var(--primary);
+    padding: 2rem;
+    text-align: center;
+}
+
+.payment-amount {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin: 1rem 0;
+}
+
+.payment-details {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .booking-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .slots-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    }
+    
+    .vehicle-info {
+        grid-template-columns: 1fr;
+    }
+}

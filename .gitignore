@@ -1,0 +1,12 @@
+.DS_Store
+__pycache__/
+*.pyc
+
+web/backend/.env
+web/backend/.venv/
+web/backend/libparking.so
+web/backend/memory/
+
+web/frontend/node_modules/
+build/
+dist/

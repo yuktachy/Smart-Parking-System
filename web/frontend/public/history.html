@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History - SmartPark</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+    <nav class="nav-header" data-testid="main-navigation">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="index.html" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 0.75rem;">
+                    <i class="fas fa-parking"></i><span>SMARTPARK</span>
+                </a>
+            </div>
+            <div class="nav-links" id="navLinks">
+                <a href="index.html">Home</a>
+                <a href="booking.html">Book Slot</a>
+                <a href="dashboard.html">Dashboard</a>
+                <span id="userNav"></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="dashboard-header" data-testid="history-header">
+            <div>
+                <h1 class="dashboard-title">My Parking History</h1>
+                <p class="dashboard-subtitle" id="userGreeting">Your reservation and parking records</p>
+            </div>
+        </div>
+
+        <!-- Parking History -->
+        <div class="dashboard-grid" style="grid-template-columns: 1fr;">
+            <div class="dashboard-panel full-width" data-testid="parking-history-panel">
+                <div class="panel-header">
+                    <h3 class="panel-title"><i class="fas fa-car"></i> Parking Sessions</h3>
+                </div>
+                <div class="panel-content">
+                    <div id="parkingHistory" data-testid="parking-history-table" class="activity-table">
+                        <p style="text-align:center; color: var(--text-secondary);">Loading...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-panel full-width" data-testid="reservation-history-panel">
+                <div class="panel-header">
+                    <h3 class="panel-title"><i class="fas fa-calendar-check"></i> Reservations</h3>
+                </div>
+                <div class="panel-content">
+                    <div id="reservationHistory" data-testid="reservation-history-table" class="activity-table">
+                        <p style="text-align:center; color: var(--text-secondary);">Loading...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin;
+
+        async function checkAuth() {
+            try {
+                const res = await fetch(`${API_URL}/api/auth/me`, {credentials: 'include'});
+                if (!res.ok) throw new Error('Not logged in');
+                const user = await res.json();
+                if (user.error) throw new Error('Not logged in');
+
+                document.getElementById('userGreeting').textContent = `Welcome back, ${user.name}`;
+                document.getElementById('userNav').innerHTML = `
+                    <a href="history.html" style="color: var(--primary);">${user.name}</a>
+                    <a href="#" onclick="handleLogout()" data-testid="logout-btn" style="color: var(--destructive);">Logout</a>
+                `;
+                return user;
+            } catch {
+                window.location.href = 'login.html';
+                return null;
+            }
+        }
+
+        async function handleLogout() {
+            await fetch(`${API_URL}/api/auth/logout`, {method: 'POST', credentials: 'include'});
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        async function loadHistory() {
+            // Load parking sessions
+            try {
+                const res = await fetch(`${API_URL}/api/vehicles/history`, {credentials: 'include'});
+                if (res.ok) {
+                    const data = await res.json();
+                    displayParkingHistory(data.vehicles);
+                }
+            } catch (e) {
+                console.error('Error loading parking history:', e);
+            }
+
+            // Load reservations
+            try {
+                const res = await fetch(`${API_URL}/api/reservations/history`, {credentials: 'include'});
+                if (res.ok) {
+                    const data = await res.json();
+                    displayReservationHistory(data.reservations);
+                }
+            } catch (e) {
+                console.error('Error loading reservation history:', e);
+            }
+        }
+
+        function displayParkingHistory(vehicles) {
+            const container = document.getElementById('parkingHistory');
+            if (!vehicles || vehicles.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color: var(--text-secondary); padding: 2rem;">No parking history yet. Book a slot to get started!</p>';
+                return;
+            }
+            container.innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Vehicle</th>
+                            <th>Slot</th>
+                            <th>Status</th>
+                            <th>VIP</th>
+                            <th>Duration</th>
+                            <th>Fee</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${vehicles.map(v => `
+                            <tr data-testid="history-vehicle-${v.vehicle_id}">
+                                <td><strong>${v.vehicle_number}</strong></td>
+                                <td>${v.slot_id}</td>
+                                <td><span class="status-badge ${v.status}">${v.status}</span></td>
+                                <td>${v.is_vip ? '<i class="fas fa-crown" style="color: var(--accent);"></i>' : '-'}</td>
+                                <td>${v.parked_minutes ? v.parked_minutes + ' min' : '-'}</td>
+                                <td>${v.total_fee ? '$' + v.total_fee.toFixed(2) : '-'}</td>
+                                <td>${new Date(v.created_at).toLocaleDateString()}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function displayReservationHistory(reservations) {
+            const container = document.getElementById('reservationHistory');
+            if (!reservations || reservations.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color: var(--text-secondary); padding: 2rem;">No reservations yet.</p>';
+                return;
+            }
+            container.innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Vehicle</th>
+                            <th>Slot</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Duration</th>
+                            <th>Est. Cost</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${reservations.map(r => `
+                            <tr data-testid="history-reservation-${r.reservation_id}">
+                                <td><strong>${r.vehicle_number}</strong></td>
+                                <td>${r.slot_id}</td>
+                                <td>${r.slot_type}${r.is_vip ? ' <i class="fas fa-crown" style="color: var(--accent);"></i>' : ''}</td>
+                                <td><span class="status-badge ${r.status}">${r.status}</span></td>
+                                <td>${r.duration_minutes} min</td>
+                                <td>$${r.estimated_cost.toFixed(2)}</td>
+                                <td>${new Date(r.created_at).toLocaleDateString()}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        checkAuth().then(user => { if (user) loadHistory(); });
+    </script>
+</body>
+</html>
