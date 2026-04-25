@@ -9,6 +9,7 @@ import logging
 import bcrypt
 import jwt
 import secrets
+import copy
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from functools import wraps
@@ -16,6 +17,7 @@ import ctypes
 import uuid
 import time
 import random
+from pymongo.errors import PyMongoError
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -23,29 +25,214 @@ load_dotenv(ROOT_DIR / '.env')
 JWT_SECRET = os.environ.get('JWT_SECRET', secrets.token_hex(32))
 JWT_ALGORITHM = "HS256"
 
-# Load C++ library
-cpp_lib = ctypes.CDLL(str(ROOT_DIR / 'libparking.so'))
-cpp_lib.calculateFee.argtypes = [ctypes.c_int, ctypes.c_bool]
-cpp_lib.calculateFee.restype = ctypes.c_double
-cpp_lib.generateQRCode.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
-cpp_lib.generateQRCode.restype = None
-cpp_lib.validateQRCode.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
-cpp_lib.validateQRCode.restype = ctypes.c_bool
-cpp_lib.calculateTimeDifference.argtypes = [ctypes.c_long, ctypes.c_long]
-cpp_lib.calculateTimeDifference.restype = ctypes.c_int
-cpp_lib.isSlotAvailable.argtypes = [ctypes.c_int, ctypes.c_int]
-cpp_lib.isSlotAvailable.restype = ctypes.c_bool
-cpp_lib.applyVIPDiscount.argtypes = [ctypes.c_double]
-cpp_lib.applyVIPDiscount.restype = ctypes.c_double
-cpp_lib.estimateCost.argtypes = [ctypes.c_int, ctypes.c_bool]
-cpp_lib.estimateCost.restype = ctypes.c_double
-cpp_lib.calculateSlotPriority.argtypes = [ctypes.c_double, ctypes.c_bool, ctypes.c_bool]
-cpp_lib.calculateSlotPriority.restype = ctypes.c_double
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-mongo_client = MongoClient(mongo_url)
-db = mongo_client[os.environ['DB_NAME']]
+
+class PythonParkingLib:
+    def calculateFee(self, minutes, is_vip):
+        base_fee = 40.0
+        hourly_rate = 60.0 if is_vip else 100.0
+        if minutes <= 15:
+            return 0.0
+        hours = minutes / 60.0
+        return round(base_fee + (hours * hourly_rate), 2)
+
+    def generateQRCode(self, vehicle_number, slot_id, output_buffer):
+        data = f"{vehicle_number.decode('utf-8')}_{slot_id.decode('utf-8')}"
+        hashed = 5381
+        for char in data:
+            hashed = ((hashed << 5) + hashed) + ord(char)
+        qr_code = f"QR_{hashed}_{vehicle_number.decode('utf-8')}"
+        output_buffer.value = qr_code.encode('utf-8')
+
+    def validateQRCode(self, qr_code, vehicle_number):
+        return vehicle_number.decode('utf-8') in qr_code.decode('utf-8')
+
+    def calculateTimeDifference(self, entry_time, exit_time):
+        return (exit_time - entry_time) // 60
+
+    def isSlotAvailable(self, current_occupancy, max_capacity):
+        return current_occupancy < max_capacity
+
+    def applyVIPDiscount(self, original_fee):
+        return original_fee * 0.7
+
+    def estimateCost(self, estimated_minutes, is_vip):
+        return self.calculateFee(estimated_minutes, is_vip)
+
+    def calculateSlotPriority(self, distance, is_vip, is_available):
+        if not is_available:
+            return -1.0
+        priority = 100.0 - distance
+        if is_vip:
+            priority += 50.0
+        return priority
+
+
+class InMemoryResult:
+    def __init__(self, modified_count=0):
+        self.modified_count = modified_count
+
+
+class InMemoryCursor:
+    def __init__(self, documents):
+        self.documents = documents
+
+    def sort(self, key, direction):
+        reverse = direction == -1
+        self.documents.sort(key=lambda doc: doc.get(key), reverse=reverse)
+        return self
+
+    def limit(self, value):
+        self.documents = self.documents[:value]
+        return self
+
+    def __iter__(self):
+        return iter(self.documents)
+
+
+def _matches_query(document, query):
+    for key, expected in query.items():
+        actual = document.get(key)
+        if isinstance(expected, dict):
+            for operator, operand in expected.items():
+                if operator == "$exists":
+                    if (key in document) != operand:
+                        return False
+                elif operator == "$lte":
+                    if actual is None or actual > operand:
+                        return False
+                elif operator == "$gte":
+                    if actual is None or actual < operand:
+                        return False
+                else:
+                    return False
+        elif actual != expected:
+            return False
+    return True
+
+
+def _project_document(document, projection):
+    if projection is None:
+        return copy.deepcopy(document)
+    include_keys = [key for key, enabled in projection.items() if enabled]
+    if include_keys:
+        return {key: copy.deepcopy(document[key]) for key in include_keys if key in document}
+    result = copy.deepcopy(document)
+    for key, enabled in projection.items():
+        if enabled == 0:
+            result.pop(key, None)
+    return result
+
+
+class InMemoryCollection:
+    def __init__(self):
+        self.documents = []
+
+    def count_documents(self, query):
+        return sum(1 for doc in self.documents if _matches_query(doc, query))
+
+    def insert_many(self, documents):
+        for document in documents:
+            self.insert_one(document)
+
+    def insert_one(self, document):
+        stored = copy.deepcopy(document)
+        stored.setdefault("_id", str(uuid.uuid4()))
+        self.documents.append(stored)
+        return stored
+
+    def find_one(self, query, projection=None):
+        for document in self.documents:
+            if _matches_query(document, query):
+                return _project_document(document, projection)
+        return None
+
+    def find(self, query, projection=None):
+        matches = [
+            _project_document(document, projection)
+            for document in self.documents
+            if _matches_query(document, query)
+        ]
+        return InMemoryCursor(matches)
+
+    def update_one(self, query, update):
+        for index, document in enumerate(self.documents):
+            if _matches_query(document, query):
+                updated = copy.deepcopy(document)
+                if "$set" in update:
+                    updated.update(copy.deepcopy(update["$set"]))
+                self.documents[index] = updated
+                return InMemoryResult(modified_count=1)
+        return InMemoryResult(modified_count=0)
+
+    def delete_one(self, query):
+        for index, document in enumerate(self.documents):
+            if _matches_query(document, query):
+                del self.documents[index]
+                return InMemoryResult(modified_count=1)
+        return InMemoryResult(modified_count=0)
+
+    def create_index(self, *args, **kwargs):
+        return None
+
+
+class InMemoryDatabase:
+    def __init__(self):
+        self.collections = {}
+
+    def __getattr__(self, name):
+        return self.__getitem__(name)
+
+    def __getitem__(self, name):
+        if name not in self.collections:
+            self.collections[name] = InMemoryCollection()
+        return self.collections[name]
+
+
+def load_parking_library():
+    library_path = ROOT_DIR / 'libparking.dll'
+    try:
+        library = ctypes.CDLL(str(library_path))
+        library.calculateFee.argtypes = [ctypes.c_int, ctypes.c_bool]
+        library.calculateFee.restype = ctypes.c_double
+        library.generateQRCode.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
+        library.generateQRCode.restype = None
+        library.validateQRCode.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
+        library.validateQRCode.restype = ctypes.c_bool
+        library.calculateTimeDifference.argtypes = [ctypes.c_long, ctypes.c_long]
+        library.calculateTimeDifference.restype = ctypes.c_int
+        library.isSlotAvailable.argtypes = [ctypes.c_int, ctypes.c_int]
+        library.isSlotAvailable.restype = ctypes.c_bool
+        library.applyVIPDiscount.argtypes = [ctypes.c_double]
+        library.applyVIPDiscount.restype = ctypes.c_double
+        library.estimateCost.argtypes = [ctypes.c_int, ctypes.c_bool]
+        library.estimateCost.restype = ctypes.c_double
+        library.calculateSlotPriority.argtypes = [ctypes.c_double, ctypes.c_bool, ctypes.c_bool]
+        library.calculateSlotPriority.restype = ctypes.c_double
+        logger.info("Loaded native parking library from %s", library_path)
+        return library
+    except OSError:
+        logger.warning("libparking.dll not found. Falling back to Python parking helpers.")
+        return PythonParkingLib()
+
+
+def create_database():
+    mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+    db_name = os.environ.get('DB_NAME', 'smart_parking_dev')
+    try:
+        client = MongoClient(mongo_url, serverSelectionTimeoutMS=2000)
+        client.admin.command('ping')
+        logger.info("Connected to MongoDB at %s", mongo_url)
+        return client[db_name]
+    except PyMongoError:
+        logger.warning("MongoDB unavailable. Falling back to in-memory datastore.")
+        return InMemoryDatabase()
+
+
+cpp_lib = load_parking_library()
+db = create_database()
 
 # Collections
 parking_slots = db.parking_slots
@@ -62,9 +249,6 @@ CORS(flask_app, supports_credentials=True, origins=os.environ.get('CORS_ORIGINS'
 
 # Create Socket.IO server (async ASGI mode)
 sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*')
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 # ========== AUTH HELPERS ==========
 

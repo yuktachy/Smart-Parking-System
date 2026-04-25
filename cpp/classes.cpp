@@ -1,6 +1,7 @@
 #include "classes.h"
 
 // ---------------- VEHICLE ----------------
+// Encapsulation: storing vehicle details with controlled access
 Vehicle::Vehicle(string num, string t) {
     vehicleNumber = num;
     type = t;
@@ -15,6 +16,7 @@ string Vehicle::getType() {
 }
 
 // ---------------- PARKING SLOT ----------------
+// Encapsulation: represents one parking slot object
 ParkingSlot::ParkingSlot(int id, bool vip) {
     slotID = id;
     isOccupied = false;
@@ -22,12 +24,13 @@ ParkingSlot::ParkingSlot(int id, bool vip) {
 }
 
 // ---------------- FILE HANDLER ----------------
+// Abstraction: handles file operations separately
 void FileHandler::writeData(string record) {
     ofstream file("data.csv", ios::app);
     file << record << endl;
     file.close();
 }
-
+// Abstraction: reading file without exposing internal logic
 void FileHandler::readData() {
     ifstream file("data.csv");
     string line;
@@ -40,7 +43,10 @@ void FileHandler::readData() {
 
 
 // ---------------- SLOT ALLOCATION LOGIC ----------------
+// Inheritance + Polymorphism:
+// These classes override the same function differently
 void CarParking::allocateSlot(int &slot, vector<ParkingSlot>& slots) {
+     // Polymorphism: behavior specific to Car
     for(auto &s : slots) {
         if(!s.isOccupied && !s.isVIP) {
             s.isOccupied = true;
@@ -51,6 +57,7 @@ void CarParking::allocateSlot(int &slot, vector<ParkingSlot>& slots) {
 }
 
 void BikeParking::allocateSlot(int &slot, vector<ParkingSlot>& slots) {
+       // Polymorphism: VIP vehicles get VIP slots
     for(auto &s : slots) {
         if(!s.isOccupied && !s.isVIP) {
             s.isOccupied = true;
@@ -71,22 +78,28 @@ void VIPParking::allocateSlot(int &slot, vector<ParkingSlot>& slots) {
 }
 
 // ---------------- FEE ----------------
+
+// Polymorphism: different fee logic for different vehicle types
 double CarParking::calculateFee(int hours) { return hours * 50; }
 double BikeParking::calculateFee(int hours) { return hours * 20; }
 double VIPParking::calculateFee(int hours) { return hours * 100; }
 
 // ---------------- DISPLAY ----------------
+// Polymorphism: different display messages
 void CarParking::displayDetails() { cout << "Car Parking\n"; }
 void BikeParking::displayDetails() { cout << "Bike Parking\n"; }
 void VIPParking::displayDetails() { cout << "VIP Parking\n"; }
 
 // ---------------- QR ENTRY ----------------
+
+// Abstraction: hides QR generation logic
 string QREntry::generateQR(string vehicleNumber) {
     return "QR_" + vehicleNumber;
 
 }
 
 // ---------------- RESERVATION ----------------
+// Encapsulation: handles reservation storage
 void Reservation::reserveSlot(string vehicleNumber, int slot) {
     ofstream file("reservation.csv", ios::app);
     file << vehicleNumber << "," << slot << endl;
@@ -113,6 +126,7 @@ ParkingManager::ParkingManager() {
     }
 }
 
+// Core function demonstrating runtime polymorphism
 void ParkingManager::parkVehicle() {
     string num, type;
     int entryTime, exitTime;
@@ -128,7 +142,7 @@ void ParkingManager::parkVehicle() {
 
     int hours = exitTime - entryTime;
     int slot = -1;
-
+ // Base class pointer (Polymorphism)
     ParkingSystem* p;
 
     if(type == "car")
@@ -138,12 +152,13 @@ void ParkingManager::parkVehicle() {
     else
         p = new VIPParking();
 
+    // Calls correct function at runtime
     p->allocateSlot(slot, slots);
     double fee = p->calculateFee(hours);
 
     QREntry qrObj;
     string qr = qrObj.generateQR(num);
-
+  // File handling abstraction
     file.writeData(num + "," + type + "," +
     to_string(slot) + "," +
     to_string(entryTime) + "," +

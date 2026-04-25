@@ -4,6 +4,9 @@ __pycache__/
 
 web/backend/.env
 web/backend/.venv/
+web/backend/venv/
+web/backend/env/
+web/backend/libparking.dll
 web/backend/libparking.so
 web/backend/memory/
 
