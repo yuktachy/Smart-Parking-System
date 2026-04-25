@@ -4,15 +4,24 @@
 using namespace std;
 
 // ---------------- ABSTRACT BASE CLASS ----------------
+// Abstraction:
+// ParkingSystem is an abstract class (interface)
+// It hides implementation and forces derived classes to define behavior
 class ParkingSystem {
 public:
+    // Pure virtual functions (runtime polymorphism)
     virtual void allocateSlot(int &slot, vector<class ParkingSlot>& slots) = 0;
     virtual double calculateFee(int hours) = 0;
     virtual void displayDetails() = 0;
+
+    // Virtual destructor
     virtual ~ParkingSystem() {}
 };
 
-// ---------------- VEHICLE ----------------
+// ---------------- VEHICLE ---------------
+// Encapsulation:
+// Data (vehicleNumber, type) is kept private
+// Access is provided through public methods
 class Vehicle {
 private:
     string vehicleNumber;
@@ -24,6 +33,8 @@ public:
 };
 
 // ---------------- PARKING SLOT ----------------
+// Encapsulation:
+// Represents a parking slot with properties
 class ParkingSlot {
 public:
     int slotID;
@@ -34,6 +45,8 @@ public:
 };
 
 // ---------------- FILE HANDLER ----------------
+// Abstraction + SRP:
+// Handles only file operations (separate responsibility)
 class FileHandler {
 public:
     void writeData(string record);
@@ -41,20 +54,25 @@ public:
 };
 
 // ---------------- DERIVED CLASSES ----------------
+// Inheritance:
+// CarParking inherits from ParkingSystem
+
+// Polymorphism:
+// Overrides base class functions with specific behavior
 class CarParking : public ParkingSystem {
 public:
     void allocateSlot(int &slot, vector<ParkingSlot>& slots) override;
     double calculateFee(int hours) override;
     void displayDetails() override;
 };
-
+// Inheritance + Polymorphism
 class BikeParking : public ParkingSystem {
 public:
     void allocateSlot(int &slot, vector<ParkingSlot>& slots) override;
     double calculateFee(int hours) override;
     void displayDetails() override;
 };
-
+// Inheritance + Polymorphism
 class VIPParking : public ParkingSystem {
 public:
     void allocateSlot(int &slot, vector<ParkingSlot>& slots) override;
@@ -63,6 +81,8 @@ public:
 };
 
 // ---------------- QR ENTRY ----------------
+// Abstraction:
+// Only exposes QR generation, hides internal logic
 class QREntry {
 public:
     string generateQR(string vehicleNumber);
@@ -70,6 +90,9 @@ public:
 };
 
 // ---------------- RESERVATION ----------------
+
+// Encapsulation + SRP:
+// Handles reservation logic separately
 class Reservation {
 public:
     void reserveSlot(string vehicleNumber, int slot);
